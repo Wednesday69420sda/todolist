@@ -11,6 +11,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+
 class TodoController extends AbstractController
 {
     /**
@@ -58,6 +59,41 @@ class TodoController extends AbstractController
         ]);
 
 
+    }
+
+    /**
+     * @Route("/update", name="update")
+     * @param Request $request
+     */
+    public function update(Request $request, $id) {
+        $article = new TodoItem();
+        $article = $this->getDoctrine()->getRepository(TodoItem::class)->find($id);
+
+        $form = $this->createFormBuilder($article)
+            ->add('title', TextType::class, array('attr' => array('class' => 'form-control')))
+            ->add('body', TextType::class, array(
+                'required' => false,
+                'attr' => array('class' => 'form-control')
+            ))
+            ->add('save', SubmitType::class, array(
+                'label' => 'Update',
+                'attr' => array('class' => 'btn btn-primary mt-3')
+            ))
+            ->getForm();
+
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid()) {
+
+            $entityManager = $this->getDoctrine()->getManager();
+            $entityManager->flush();
+
+            return $this->redirectToRoute('article_list');
+        }
+
+        return $this->render('articles/edit.html.twig', array(
+            'form' => $form->createView()
+        ));
     }
 
     /**
